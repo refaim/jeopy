@@ -7,6 +7,11 @@ import wx.grid
 import suite
 from common import *
 
+PRICE_MULTIPLIER = 100
+DEFAULT_WINDOW_SIZE = (640, 480)
+DEFAULT_FONT_SIZE = 16
+WINDOW_TITLE = 'JeoPy'
+
 
 def register_identifiers():
     identifiers = (
@@ -23,10 +28,27 @@ class Game(object):
         self.started = False
 
 
-class Application(wx.App):
+class QuestionsTable(wx.grid.Grid):
     def __init__(self, *args, **kwargs):
-        wx.App.__init__(self, *args, **kwargs)
-        self.retcode = 0
+        wx.grid.Grid.__init__(self, *args, **kwargs)
+        self.SetDefaultCellAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
+        self.EnableEditing(edit=False)
+        self.EnableDragRowSize(enable=False)
+        self.EnableDragColSize(enable=False)
+        self.EnableDragGridSize(enable=False)
+        # Hide headers.
+        self.SetRowLabelSize(0)
+        self.SetColLabelSize(0)
+
+        self.Bind(wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.OnDblClick)
+
+
+    def OnDblClick(self, event):
+        row, col = event.GetRow(), event.GetCol()
+        if col != 0 and self.GetCellValue(row, col) != '':
+            attr = self.GetOrCreateCellAttr(row, col)
+            wx.MessageBox(attr.text)
+            self.SetCellValue(row, col, '')
 
 
 class MainWindow(wx.Frame):
@@ -34,10 +56,14 @@ class MainWindow(wx.Frame):
         wx.Frame.__init__(self, *args, **kwargs)
         self.Centre()
         self.CreateMenu()
-        self.CreatePanel()
+        self.CreatePanels()
         self.game = Game()
-        self.qtable = None
-        self.font = wx.Font(14, wx.SWISS, wx.NORMAL, wx.BOLD)
+        self.questions = None
+        self.font = wx.SystemSettings.GetFont(0)
+        self.font.SetPointSize(DEFAULT_FONT_SIZE)
+
+        wx.EVT_SIZE(self, self.OnResize)
+
 
     def DisplayError(self, data):
          wx.MessageBox(str(data), 'Error', wx.OK | wx.ICON_ERROR)
@@ -56,13 +82,22 @@ class MainWindow(wx.Frame):
         self.SetMenuBar(bar)
 
 
-    def CreatePanel(self):
-        self.panel = wx.Panel(self, wx.ID_ANY)
-        #box = wx.BoxSizer(wx.VERTICAL)
-        #box.Add(self.panel, 1, wx.EXPAND)
-        #self.SetAutoLayout(True)
-        #self.SetSizer(box)
-        #self.Layout()
+    def CreatePanels(self):
+        self.questionsPanel = wx.Panel(self, wx.ID_ANY | wx.SUNKEN_BORDER)
+        self.playersPanel = wx.Panel(self, wx.ID_ANY | wx.SUNKEN_BORDER)
+        self.questionsPanel.SetBackgroundColour("BLUE")
+        self.playersPanel.SetBackgroundColour("RED")
+
+        box = wx.BoxSizer(wx.VERTICAL)
+        box.Add(self.questionsPanel, 2, wx.EXPAND)
+        box.Add(self.playersPanel, 1, wx.EXPAND)
+        self.SetSizer(box)
+
+
+    def OnResize(self, event):
+        if self.questions:
+            self.questions.Centre()
+        event.Skip()
 
 
     def OnClose(self, event):
@@ -88,36 +123,31 @@ class MainWindow(wx.Frame):
             return
         rawquestions = suite.select(rawquestions)
 
-        if self.qtable:
-            self.qtable.Destroy()
+        if self.questions:
+            self.questions.Destroy()
 
-        self.qtable = wx.grid.Grid(self)#.panel)
-        self.qtable.SetDefaultCellAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
-        self.qtable.SetDefaultCellFont(self.font)
+        self.questions = QuestionsTable(self.questionsPanel,
+            style=wx.SUNKEN_BORDER)
+        self.questions.SetDefaultCellFont(self.font)
+        self.questions.CreateGrid(len(rawquestions),
+            len(rawquestions[0][1]) + 1)
 
-        self.qtable.SetDefaultRowSize(100)
-        self.qtable.SetDefaultColSize(100)
-
-        self.qtable.CreateGrid(len(rawquestions), len(rawquestions[0][1]) + 1)
-
-        prices = (100, 200, 300, 500, 1000)
         for rownum, (topic, questions) in enumerate(rawquestions):
-            self.qtable.SetCellValue(rownum, 0, topic)
+            self.questions.SetCellValue(rownum, 0, topic)
             for colnum, question in enumerate(questions):
-                self.qtable.SetCellValue(rownum, colnum + 1, str(prices[colnum]))
+                number = colnum + 1
+                self.questions.SetCellValue(rownum, number,
+                    str(number * PRICE_MULTIPLIER))
+                attr = self.questions.GetOrCreateCellAttr(rownum, number)
+                attr.text = question[0]
 
-        box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(self.qtable, 1, wx.EXPAND)
-        #self.panel.SetSizer(box)
-        self.SetAutoLayout(True)
-        self.SetSizer(box)
-        self.Layout()
+        self.questions.AutoSize()
+        self.questions.Centre()
 
 
 if __name__ == '__main__':
     register_identifiers()
-    application = Application(redirect=True)
-    window = MainWindow(parent=None, title='JeoPy')
+    application = wx.App(redirect=True)
+    window = MainWindow(parent=None, title=WINDOW_TITLE, size=DEFAULT_WINDOW_SIZE)
     window.Show()
     application.MainLoop()
-    sys.exit(application.retcode)

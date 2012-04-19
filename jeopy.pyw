@@ -61,8 +61,6 @@ class MainWindow(wx.Frame):
         self.font = wx.SystemSettings.GetFont(0)
         self.font.SetPointSize(DEFAULT_FONT_SIZE)
 
-        wx.EVT_SIZE(self, self.OnResize)
-
 
     def DisplayError(self, data):
          wx.MessageBox(str(data), 'Error', wx.OK | wx.ICON_ERROR)
@@ -91,12 +89,6 @@ class MainWindow(wx.Frame):
         box.Add(self.questionsPanel, 2, wx.EXPAND)
         box.Add(self.playersPanel, 1, wx.EXPAND)
         self.SetSizer(box)
-
-
-    def OnResize(self, event):
-        if self.questions:
-            self.questions.Centre()
-        event.Skip()
 
 
     def OnClose(self, event):
@@ -147,6 +139,8 @@ class MainWindow(wx.Frame):
 if __name__ == '__main__':
     register_identifiers()
     application = wx.App(redirect=True)
-    window = MainWindow(parent=None, title=WINDOW_TITLE, size=DEFAULT_WINDOW_SIZE)
+    window = MainWindow(parent=None, title=WINDOW_TITLE,
+        size=DEFAULT_WINDOW_SIZE,
+        style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER ^ wx.MAXIMIZE_BOX)
     window.Show()
     application.MainLoop()

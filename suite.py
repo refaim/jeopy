@@ -1,4 +1,5 @@
 import json
+import random
 import shutil
 import string
 import StringIO
@@ -10,7 +11,7 @@ from lxml import etree
 
 from common import *
 
-def getsuite(url):
+def download(url):
     parsed = urlparse.urlparse(url)
     if parsed.netloc != 'db.chgk.info':
         raise JeopyError('Incorrect URL')
@@ -87,3 +88,11 @@ def getsuite(url):
 
         suite = { title: sections }
     return suite
+
+def select(suite, count=5):
+    blocks = {}
+    for sections in suite.itervalues():
+        for section in sections.itervalues():
+            for title, block in section.iteritems():
+                blocks[title] = block
+    return random.sample(blocks.items(), count)

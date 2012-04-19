@@ -36,16 +36,18 @@ def download(url):
     with archive.open(fb2name, 'rU') as fb2:
 
         def findall(selector, node):
-            xpath = etree.XPath(selector, namespaces={'fb2': 'http://www.gribuser.ru/xml/fictionbook/2.0'})
+            xpath = etree.XPath(selector, namespaces={
+                'fb2': 'http://www.gribuser.ru/xml/fictionbook/2.0'
+            })
             result = xpath(node)
             if not result:
-                raise JeopyError('XML parse error, "%s" not found at node %s on line %d' %
+                raise JeopyError(
+                    'XML parse error, "%s" not found at node %s on line %d' %
                     (selector, node.tag, node.sourceline))
             return result
 
         def find(selector, node):
-            r = findall(selector, node)
-            return r[0] if len(r) else None
+            return findall(selector, node)[0]
 
         tree = etree.parse(fb2)
         title = find('//fb2:book-title/text()', tree)

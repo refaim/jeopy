@@ -17,7 +17,6 @@ def register_identifiers():
     identifiers = (
         'JEOPY_ID_NEWGAME',
     )
-
     for id_ in identifiers:
         globals()[id_] = wx.NewId()
 
@@ -105,7 +104,7 @@ class MainWindow(wx.Frame):
             try:
                 dialog = wx.MessageDialog(
                     self,
-                    'Do you really want to exit?',
+                    'Do you really want to quit?',
                     self.GetTitle(),
                     wx.YES_NO | wx.NO_DEFAULT)
                 if dialog.ShowModal() == wx.ID_NO:
@@ -117,11 +116,11 @@ class MainWindow(wx.Frame):
 
     def OnNewGame(self, event):
         try:
-            rawquestions = suite.download('http://db.chgk.info/tour/nesp05sv/')
+            whole = suite.download('http://db.chgk.info/tour/nesp05sv/')
         except JeopyError, ex:
             self.DisplayError(ex)
             return
-        rawquestions = suite.select(rawquestions)
+        selection = suite.select(whole)
 
         if self.questions:
             self.questions.Destroy()

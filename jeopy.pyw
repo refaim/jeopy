@@ -38,7 +38,7 @@ class JeopyGrid(wx.grid.Grid):
         self.EnableDragColSize(enable=False)
         self.EnableDragGridSize(enable=False)
 
-        # Hide headers.
+        # hide headers
         self.SetRowLabelSize(0)
         self.SetColLabelSize(0)
 

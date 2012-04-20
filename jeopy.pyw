@@ -34,7 +34,7 @@ class Game(object):
 
 class JeopyGrid(wx.grid.Grid):
     def __init__(self, *args, **kwargs):
-        wx.grid.Grid.__init__(self, *args, **kwargs)
+        super(JeopyGrid, self).__init__(*args, **kwargs)
         self.SetDefaultCellAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
         self.EnableEditing(edit=False)
         self.EnableDragRowSize(enable=False)
@@ -47,7 +47,7 @@ class JeopyGrid(wx.grid.Grid):
 
 class QuestionsTable(JeopyGrid):
     def __init__(self, *args, **kwargs):
-        JeopyGrid.__init__(self, *args, **kwargs)
+        super(QuestionsTable, self).__init__(*args, **kwargs)
         self.Bind(wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.OnDblClick)
 
 
@@ -75,7 +75,7 @@ class QuestionsTable(JeopyGrid):
 
 class PlayersTable(JeopyGrid):
     def __init__(self, *args, **kwargs):
-        JeopyGrid.__init__(self, *args, **kwargs)
+        super(PlayersTable, self).__init__(*args, **kwargs)
 
 
     def Fill(self, players):
@@ -88,7 +88,9 @@ class PlayersTable(JeopyGrid):
 
 class SelectPlayersWindow(wx.Frame):
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, title='Enter player names',
+        super(SelectPlayersWindow, self).__init__(
+            parent,
+            title='Enter player names',
             style=wx.FRAME_FLOAT_ON_PARENT | wx.CAPTION | wx.FRAME_TOOL_WINDOW)
 
         def createButton(title, parent, sizer, wxid=wx.ID_ANY, event=None):
@@ -165,7 +167,7 @@ class SelectPlayersWindow(wx.Frame):
 
 class MainWindow(wx.Frame):
     def __init__(self, *args, **kwargs):
-        wx.Frame.__init__(self, *args, **kwargs)
+        super(MainWindow, self).__init__(*args, **kwargs)
         self.Centre()
         self.CreateMenu()
         self.CreatePanels()

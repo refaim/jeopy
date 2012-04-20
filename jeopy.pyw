@@ -48,7 +48,9 @@ class JeopyGrid(wx.grid.Grid):
 class QuestionsTable(JeopyGrid):
     def __init__(self, *args, **kwargs):
         super(QuestionsTable, self).__init__(*args, **kwargs)
-        self.Bind(wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.OnDblClick)
+        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
+        self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.EmptyHandler)
+        self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.PreventSelect)
 
 
     def Fill(self, data):
@@ -64,13 +66,41 @@ class QuestionsTable(JeopyGrid):
                 attr = self.GetOrCreateCellAttr(rownum, number)
                 attr.text = question[0]
 
+        row = topicsCount / 2
+        col = sum(divmod(questionsOnTopicCount, 2))
+        self.SetGridCursor(row, col)
 
-    def OnDblClick(self, event):
-        row, col = event.GetRow(), event.GetCol()
+
+    def EmptyHandler(self, event):
+        return
+
+
+    def PreventSelect(self, event):
+        self.SetSelectionBackground(self.GetDefaultCellBackgroundColour())
+        self.SetSelectionForeground(self.GetDefaultCellTextColour())
+        self.ClearSelection()
+
+
+    def OnKeyDown(self, event):
+        row, col = self.GetGridCursorRow(), self.GetGridCursorCol()
+        moves = (wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT)
+
+        key = event.GetKeyCode()
+        if key in moves:
+            # forbid going to topics
+            if key != wx.WXK_LEFT or col != 1:
+                event.Skip()
+            return
+
+        # stub
+        if key != wx.WXK_RETURN:
+            return
+
         if col != 0 and self.GetCellValue(row, col) != '':
             attr = self.GetOrCreateCellAttr(row, col)
             wx.MessageBox(attr.text)
             self.SetCellValue(row, col, '')
+
 
 
 class PlayersTable(JeopyGrid):

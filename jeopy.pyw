@@ -18,14 +18,6 @@ MAXIMAL_PLAYERS_COUNT = 5
 WINDOW_TITLE = 'JeoPy'
 
 
-def register_identifiers():
-    identifiers = (
-        'JEOPY_ID_NEWGAME',
-    )
-    for id_ in identifiers:
-        globals()[id_] = wx.NewId()
-
-
 def PreventEvent(widget, event):
     stub = lambda event: None
     widget.Bind(event, stub)
@@ -219,8 +211,8 @@ class MainWindow(wx.Frame):
         bar = wx.MenuBar()
 
         menu = wx.Menu()
-        menu.Append(JEOPY_ID_NEWGAME, '&New Game\tCtrl+N')
-        wx.EVT_MENU(self, JEOPY_ID_NEWGAME, self.OnNewGame)
+        menu.Append(wx.ID_ANY, '&New Game\tCtrl+N')
+        wx.EVT_MENU(self, wx.ID_ANY, self.OnNewGame)
         menu.Append(wx.ID_EXIT, '&Quit\tCtrl+Q')
         wx.EVT_MENU(self, wx.ID_EXIT, self.OnClose)
         bar.Append(menu, '&File')
@@ -291,7 +283,6 @@ class MainWindow(wx.Frame):
 
 
 if __name__ == '__main__':
-    register_identifiers()
     application = wx.App(redirect=True)
     window = MainWindow(parent=None, title=WINDOW_TITLE,
         size=DEFAULT_WINDOW_SIZE,

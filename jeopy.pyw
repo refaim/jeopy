@@ -26,6 +26,11 @@ def register_identifiers():
         globals()[id_] = wx.NewId()
 
 
+def PreventEvent(widget, event):
+    stub = lambda event: None
+    widget.Bind(event, stub)
+
+
 class Game(object):
     def __init__(self):
         self.players = {}
@@ -45,12 +50,8 @@ class JeopyGrid(wx.grid.Grid):
         self.SetRowLabelSize(0)
         self.SetColLabelSize(0)
 
-        self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.EmptyHandler)
+        PreventEvent(self, wx.grid.EVT_GRID_CELL_LEFT_CLICK)
         self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.PreventSelect)
-
-
-    def EmptyHandler(self, event):
-        return
 
 
     def PreventSelect(self, event):

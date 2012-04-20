@@ -11,6 +11,10 @@ from common import *
 PRICE_MULTIPLIER = 100
 DEFAULT_WINDOW_SIZE = (640, 480)
 DEFAULT_FONT_SIZE = 16
+DEFALUT_BORDER_SIZE = 5
+DEFAULT_PLAYERS_COUNT = 3
+MINIMAL_PLAYERS_COUNT = 2
+MAXIMAL_PLAYERS_COUNT = 5
 WINDOW_TITLE = 'JeoPy'
 
 
@@ -84,37 +88,64 @@ class PlayersTable(JeopyGrid):
 
 class SelectPlayersWindow(wx.Frame):
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent,
+        wx.Frame.__init__(self, parent, title='Enter player names',
             style=wx.FRAME_FLOAT_ON_PARENT | wx.CAPTION | wx.FRAME_TOOL_WINDOW)
-        self.callback = None
 
-        panel = wx.Panel(self, -1)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(mainSizer)
 
-        mainsizer = wx.BoxSizer(wx.VERTICAL)
+        self.playersControls = []
+        self.editPanel = wx.Panel(self, wx.ID_ANY)
+        self.editSizer = wx.BoxSizer(wx.VERTICAL)
+        self.editPanel.SetSizer(self.editSizer)
+        for i in range(DEFAULT_PLAYERS_COUNT):
+            self.AddEdit(event=None)
 
-        #ctrlsizer = wx.BoxSizer(wx.HORIZONTAL)
-        #ctrlsizer.Add(wx.StaticText(panel, -1, "Foo:"), wx.ALL, 5)
-        #self.textctrl = wx.TextCtrl(panel, -1)
-        #ctrlsizer.Add(self.textctrl, 0, wx.ALL, 5)
-        #mainsizer.Add(ctrlsizer, 1, wx.EXPAND)
+        def createButton(title, parent, sizer, wxid=wx.ID_ANY, event=None):
+            button = wx.Button(parent, wxid, title)
+            sizer.Add(button, proportion=0, flag=wx.ALIGN_CENTER | wx.ALL,
+                border=DEFALUT_BORDER_SIZE)
+            if not event is None:
+                button.Bind(wx.EVT_BUTTON, event)
 
-        buttonsizer = wx.BoxSizer(wx.HORIZONTAL)
-        okbutton = wx.Button(panel, wx.ID_OK, 'OK')
-        cancelbutton = wx.Button(panel, wx.ID_CANCEL, 'Cancel')
-        buttonsizer.Add(okbutton, 0, wx.ALIGN_CENTER | wx.ALL, 5)
-        buttonsizer.Add(cancelbutton, 0, wx.ALIGN_CENTER | wx.ALL, 5)
-        mainsizer.Add(buttonsizer)
+        countPanel = wx.Panel(self, wx.ID_ANY)
+        countSizer = wx.BoxSizer(wx.HORIZONTAL)
+        countPanel.SetSizer(countSizer)
+        createButton('Increase', countPanel, countSizer)#, event=self.AddEdit)
+        createButton('Decrease', countPanel, countSizer)#, event=self.RemoveEdit)
 
-        panel.SetSizer(mainsizer)
-        panel.Layout()
-        mainsizer.Fit(self)
+        buttonPanel = wx.Panel(self, wx.ID_ANY)
+        buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonPanel.SetSizer(buttonSizer)
+        createButton('Start', buttonPanel, buttonSizer, wx.ID_OK, self.OnExit)
+        createButton('Cancel', buttonPanel, buttonSizer, wx.ID_CANCEL, self.OnExit)
 
-        okbutton.SetDefault()
-        okbutton.Bind(wx.EVT_BUTTON, self.OnExit)
-        cancelbutton.Bind(wx.EVT_BUTTON, self.OnExit)
+        mainSizer.Add(countPanel, proportion=1)
+        mainSizer.Add(self.editPanel, proportion=len(self.playersControls),
+            flag=wx.EXPAND)
+        mainSizer.Add(buttonPanel, proportion=1)
+        mainSizer.Fit(self)
 
 
-    def Show(self, callback=None):
+    def AddEdit(self, event):
+        if len(self.playersControls) < MAXIMAL_PLAYERS_COUNT:
+            edit = wx.TextCtrl(self.editPanel)
+            self.playersControls.append(edit)
+            self.editSizer.Add(edit, proportion=1, flag=wx.ALL | wx.EXPAND,
+                border=DEFALUT_BORDER_SIZE)
+            self.GetSizer().Fit(self)
+
+
+    def RemoveEdit(self, event):
+        if len(self.playersControls) > MINIMAL_PLAYERS_COUNT:
+            target = self.playersControls.pop()
+            self.editSizer.Remove(target)
+            target.Destroy()
+            self.editSizer.Fit(self.editPanel)
+            self.GetSizer().Fit(self)
+
+
+    def Show(self, callback):
         self.callback = callback
         self.CenterOnParent()
         self.GetParent().Enable(False)
@@ -123,10 +154,10 @@ class SelectPlayersWindow(wx.Frame):
 
 
     def OnExit(self, event):
-        players = ['Sarah', 'John', 'Caesar']
         try:
-            if self.callback:
-                self.callback(players)
+            if event.EventObject.GetId() == wx.ID_OK:
+                names = [edit.Value for edit in self.playersControls]
+                self.callback(names)
         finally:
             self.GetParent().Enable(True)
             self.Destroy()
@@ -167,8 +198,8 @@ class MainWindow(wx.Frame):
         self.playersPanel = wx.Panel(self, wx.ID_ANY | wx.SUNKEN_BORDER)
 
         box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(self.questionsPanel, 2, wx.EXPAND)
-        box.Add(self.playersPanel, 1, wx.EXPAND)
+        box.Add(self.questionsPanel, proportion=2, flag=wx.EXPAND)
+        box.Add(self.playersPanel, proportion=1, flag=wx.EXPAND)
         self.SetSizer(box)
 
 

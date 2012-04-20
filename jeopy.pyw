@@ -107,6 +107,7 @@ class QuestionsTable(JeopyGrid):
 class PlayersTable(JeopyGrid):
     def __init__(self, *args, **kwargs):
         super(PlayersTable, self).__init__(*args, **kwargs)
+        self.SetCellHighlightPenWidth(0) # hide cursor
 
 
     def Fill(self, players):

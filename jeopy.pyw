@@ -40,17 +40,29 @@ class JeopyGrid(wx.grid.Grid):
         self.EnableDragRowSize(enable=False)
         self.EnableDragColSize(enable=False)
         self.EnableDragGridSize(enable=False)
+
         # Hide headers.
         self.SetRowLabelSize(0)
         self.SetColLabelSize(0)
+
+        self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.EmptyHandler)
+        self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.PreventSelect)
+
+
+    def EmptyHandler(self, event):
+        return
+
+
+    def PreventSelect(self, event):
+        self.SetSelectionBackground(self.GetDefaultCellBackgroundColour())
+        self.SetSelectionForeground(self.GetDefaultCellTextColour())
+        self.ClearSelection()
 
 
 class QuestionsTable(JeopyGrid):
     def __init__(self, *args, **kwargs):
         super(QuestionsTable, self).__init__(*args, **kwargs)
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
-        self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.EmptyHandler)
-        self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.PreventSelect)
 
 
     def Fill(self, data):
@@ -69,16 +81,6 @@ class QuestionsTable(JeopyGrid):
         row = topicsCount / 2
         col = sum(divmod(questionsOnTopicCount, 2))
         self.SetGridCursor(row, col)
-
-
-    def EmptyHandler(self, event):
-        return
-
-
-    def PreventSelect(self, event):
-        self.SetSelectionBackground(self.GetDefaultCellBackgroundColour())
-        self.SetSelectionForeground(self.GetDefaultCellTextColour())
-        self.ClearSelection()
 
 
     def OnKeyDown(self, event):
@@ -100,7 +102,6 @@ class QuestionsTable(JeopyGrid):
             attr = self.GetOrCreateCellAttr(row, col)
             wx.MessageBox(attr.text)
             self.SetCellValue(row, col, '')
-
 
 
 class PlayersTable(JeopyGrid):

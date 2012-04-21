@@ -181,13 +181,11 @@ class SelectPlayersWindow(wx.Frame):
 
 
     def OnExit(self, event):
-        try:
-            if event.EventObject.GetId() == wx.ID_OK:
-                names = [edit.Value for edit in self.playersControls]
-                self.callback(names)
-        finally:
-            self.GetParent().Enable(True)
-            self.Destroy()
+        self.GetParent().Enable(True)
+        self.Destroy()
+        if event.EventObject.GetId() == wx.ID_OK:
+            names = [edit.Value for edit in self.playersControls]
+            self.callback(names)
 
 
 class MainWindow(wx.Frame):

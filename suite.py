@@ -12,6 +12,7 @@ from lxml import etree
 
 from common import *
 
+
 def download(url):
     parsed = urlparse.urlparse(url)
     if parsed.netloc != 'db.chgk.info':
@@ -33,64 +34,67 @@ def download(url):
     if os.path.splitext(fb2name)[1] != '.fb2':
         raise JeopyError('No fb2 files found in the archive')
 
-    with archive.open(fb2name, 'rU') as fb2:
+    return archive.open(fb2name, 'rU')
 
-        def findall(selector, node):
-            xpath = etree.XPath(selector, namespaces={
-                'fb2': 'http://www.gribuser.ru/xml/fictionbook/2.0'
-            })
-            result = xpath(node)
-            if not result:
-                raise JeopyError(
-                    'XML parse error, "%s" not found at node %s on line %d' %
-                    (selector, node.tag, node.sourceline))
-            return result
 
-        def find(selector, node):
-            return findall(selector, node)[0]
+def parse(fb2):
+    def findall(selector, node):
+        xpath = etree.XPath(selector, namespaces={
+            'fb2': 'http://www.gribuser.ru/xml/fictionbook/2.0'
+        })
+        result = xpath(node)
+        if not result:
+            raise JeopyError(
+                'XML parse error, "%s" not found at node %s on line %d' %
+                (selector, node.tag, node.sourceline))
+        return result
 
-        tree = etree.parse(fb2)
-        title = find('//fb2:book-title/text()', tree)
-        body = find('//fb2:body', tree)
-        sections = {}
+    def find(selector, node):
+        return findall(selector, node)[0]
 
-        # rounds
-        for section in findall('//fb2:section', body):
-            sectitle = find('.//fb2:title/fb2:p/text()', section)
-            sections[sectitle] = {}
+    tree = etree.parse(fb2)
+    title = find('//fb2:book-title/text()', tree)
+    body = find('//fb2:body', tree)
+    sections = {}
 
-            # questions / answers blocks
-            for i, poem in enumerate(findall('//fb2:poem', section)):
+    # rounds
+    for section in findall('//fb2:section', body):
+        sectitle = find('.//fb2:title/fb2:p/text()', section)
+        sections[sectitle] = {}
 
-                is_questions = (i + 1) % 2 != 0
+        # questions / answers blocks
+        for i, poem in enumerate(findall('//fb2:poem', section)):
 
-                if is_questions:
+            is_questions = (i + 1) % 2 != 0
 
-                    delnum = lambda s: s.strip()[3:]
+            if is_questions:
 
-                    questions = []
-                    rows = map(string.strip, findall('.//fb2:v/text()', poem))
-                    blocktitle = rows[0]
-                    for row in rows[1:]:
-                        if row[0].isdigit():
-                            questions.append(delnum(row))
-                        else:
-                            questions[-1] += u'\n' + row
-                    if len(questions) < 5:
-                        questions.append(delnum(poem.getnext().text))
+                delnum = lambda s: s.strip()[3:]
 
-                else:
+                questions = []
+                rows = map(string.strip, findall('.//fb2:v/text()', poem))
+                blocktitle = rows[0]
+                for row in rows[1:]:
+                    if row[0].isdigit():
+                        questions.append(delnum(row))
+                    else:
+                        questions[-1] += u'\n' + row
+                if len(questions) < 5:
+                    questions.append(delnum(poem.getnext().text))
 
-                    answers = map(delnum, findall('.//fb2:v/text()', poem))
-                    if len(answers) != 5:
-                        raise JeopyError(
-                            'Not enough answers at line %d' % poem.sourceline)
+            else:
 
-                    # save
-                    sections[sectitle][blocktitle] = zip(questions, answers)
+                answers = map(delnum, findall('.//fb2:v/text()', poem))
+                if len(answers) != 5:
+                    raise JeopyError(
+                        'Not enough answers at line %d' % poem.sourceline)
 
-        suite = { title: sections }
+                # save
+                sections[sectitle][blocktitle] = zip(questions, answers)
+
+    suite = { title: sections }
     return suite
+
 
 def select(suite, count=5):
     blocks = {}

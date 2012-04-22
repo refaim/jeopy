@@ -294,7 +294,7 @@ class MainWindow(wx.Frame):
 
     def StartGame(self):
         try:
-            whole = suite.download('http://db.chgk.info/tour/nesp05sv/')
+            whole = suite.parse(open('sample.fb2', 'rU'))
         except JeopyError, ex:
             self.DisplayError(ex)
             return

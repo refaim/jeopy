@@ -253,10 +253,9 @@ class MainWindow(wx.Frame):
     def CreatePanels(self):
         self.questionsPanel = wx.Panel(self, wx.ID_ANY | wx.SUNKEN_BORDER)
         self.playersPanel = wx.Panel(self, wx.ID_ANY | wx.SUNKEN_BORDER)
-
         box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(self.questionsPanel, proportion=2, flag=wx.EXPAND)
-        box.Add(self.playersPanel, proportion=1, flag=wx.EXPAND)
+        box.Add(self.questionsPanel, proportion=5, flag=wx.EXPAND)
+        box.Add(self.playersPanel, proportion=2, flag=wx.EXPAND)
         self.SetSizer(box)
 
 

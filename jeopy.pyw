@@ -313,23 +313,22 @@ class MainWindow(wx.Frame):
             return
         selection = suite.select(whole)
 
-        def initTable(tableClass, parent, fillData):
-            table = tableClass(parent, style=wx.SUNKEN_BORDER)
+        def initTable(memberName, memberClass, parent, data):
+            table = getattr(self, memberName)
+            if not table is None:
+                table.Destroy()
+            table = memberClass(parent, style=wx.SUNKEN_BORDER)
             table.SetDefaultCellFont(self.font)
-            table.Fill(fillData)
+            table.Fill(data)
             table.AutoSize()
             table.Centre()
-            return table
+            setattr(self, memberName, table)
 
-        if not self.questionsTable is None:
-            self.questionsTable.Destroy()
-        self.questionsTable = initTable(QuestionsTable, self.questionsPanel,
+        initTable('questionsTable', QuestionsTable, self.questionsPanel,
             selection)
         self.questionsTable.Stretch()
 
-        if not self.playersTable is None:
-            self.playersTable.Destroy()
-        self.playersTable = initTable(PlayersTable, self.playersPanel,
+        initTable('playersTable', PlayersTable, self.playersPanel,
             self.game.players)
 
         self.game.started = True

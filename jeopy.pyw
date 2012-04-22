@@ -221,8 +221,10 @@ class SelectPlayersWindow(wx.Frame):
 
 
 class MainWindow(wx.Frame):
-    def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
+    def __init__(self):
+        super(MainWindow, self).__init__(parent=None, title=WINDOW_TITLE,
+            size=DEFAULT_WINDOW_SIZE,
+            style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER ^ wx.MAXIMIZE_BOX)
         self.Centre()
         self.CreateMenu()
         self.CreatePanels()
@@ -324,8 +326,6 @@ class MainWindow(wx.Frame):
 
 if __name__ == '__main__':
     application = wx.App(redirect=True)
-    window = MainWindow(parent=None, title=WINDOW_TITLE,
-        size=DEFAULT_WINDOW_SIZE,
-        style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER ^ wx.MAXIMIZE_BOX)
+    window = MainWindow()
     window.Show()
     application.MainLoop()

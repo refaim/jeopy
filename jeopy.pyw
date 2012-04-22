@@ -168,9 +168,9 @@ class SelectPlayersWindow(wx.Frame):
 
         countPanel, countSizer = createBlock(wx.HORIZONTAL)
         self.incButton = createButton('Increase', countPanel, countSizer,
-            self.CreateEdit)
+            event=self.CreateEdit)
         self.decButton = createButton('Decrease', countPanel, countSizer,
-            self.RemoveEdit)
+            event=self.RemoveEdit)
 
         self.playersControls = []
         self.editPanel, self.editSizer = createBlock(wx.VERTICAL)

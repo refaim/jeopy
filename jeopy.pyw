@@ -15,7 +15,6 @@ DEFALUT_BORDER_SIZE = 5
 DEFAULT_TABLE_MARGIN = DEFALUT_BORDER_SIZE * 10
 
 PRICE_MULTIPLIER = 100
-DEFAULT_PLAYERS_COUNT = 3
 MINIMAL_PLAYERS_COUNT = 2
 MAXIMAL_PLAYERS_COUNT = 5
 
@@ -156,6 +155,7 @@ class SelectPlayersWindow(wx.Frame):
                 border=DEFALUT_BORDER_SIZE)
             if not event is None:
                 button.Bind(wx.EVT_BUTTON, event)
+            return button
 
         def createBlock(orient):
             panel = wx.Panel(self, wx.ID_ANY)
@@ -166,23 +166,26 @@ class SelectPlayersWindow(wx.Frame):
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(mainSizer)
 
+        countPanel, countSizer = createBlock(wx.HORIZONTAL)
+        self.incButton = createButton('Increase', countPanel, countSizer,
+            self.CreateEdit)
+        self.decButton = createButton('Decrease', countPanel, countSizer,
+            self.RemoveEdit)
+
         self.playersControls = []
         self.editPanel, self.editSizer = createBlock(wx.VERTICAL)
-        for i in range(DEFAULT_PLAYERS_COUNT):
+        for i in range(MINIMAL_PLAYERS_COUNT):
             self.CreateEdit()
 
-        countPanel, countSizer = createBlock(wx.HORIZONTAL)
-        createButton('Increase', countPanel, countSizer)#, event=self.CreateEdit)
-        createButton('Decrease', countPanel, countSizer)#, event=self.RemoveEdit)
-
         buttonPanel, buttonSizer = createBlock(wx.HORIZONTAL)
-        createButton('Start', buttonPanel, buttonSizer, wx.ID_OK, self.OnExit)
-        createButton('Cancel', buttonPanel, buttonSizer, wx.ID_CANCEL, self.OnExit)
+        createButton('Start', buttonPanel, buttonSizer, wx.ID_OK,
+            self.OnExit)
+        createButton('Cancel', buttonPanel, buttonSizer, wx.ID_CANCEL,
+            self.OnExit)
 
-        mainSizer.Add(countPanel, proportion=1)
-        mainSizer.Add(self.editPanel, proportion=len(self.playersControls),
-            flag=wx.EXPAND)
-        mainSizer.Add(buttonPanel, proportion=1)
+        mainSizer.Add(countPanel)
+        mainSizer.Add(self.editPanel, flag=wx.EXPAND)
+        mainSizer.Add(buttonPanel)
         mainSizer.Fit(self)
 
 
@@ -194,6 +197,10 @@ class SelectPlayersWindow(wx.Frame):
                 border=DEFALUT_BORDER_SIZE)
             self.GetSizer().Fit(self)
 
+            self.decButton.Enable()
+            if len(self.playersControls) == MAXIMAL_PLAYERS_COUNT:
+                self.incButton.Disable()
+
 
     def RemoveEdit(self, event):
         if len(self.playersControls) > MINIMAL_PLAYERS_COUNT:
@@ -202,6 +209,10 @@ class SelectPlayersWindow(wx.Frame):
             target.Destroy()
             self.editSizer.Fit(self.editPanel)
             self.GetSizer().Fit(self)
+
+            self.incButton.Enable()
+            if len(self.playersControls) == MINIMAL_PLAYERS_COUNT:
+                self.decButton.Disable()
 
 
     def Show(self, callback):

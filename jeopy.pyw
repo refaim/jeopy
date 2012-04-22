@@ -8,13 +8,17 @@ import wx.grid
 import suite
 from common import *
 
-PRICE_MULTIPLIER = 100
+
 DEFAULT_WINDOW_SIZE = (640, 480)
 DEFAULT_FONT_SIZE = 16
 DEFALUT_BORDER_SIZE = 5
+DEFAULT_TABLE_MARGIN = DEFALUT_BORDER_SIZE * 10
+
+PRICE_MULTIPLIER = 100
 DEFAULT_PLAYERS_COUNT = 3
 MINIMAL_PLAYERS_COUNT = 2
 MAXIMAL_PLAYERS_COUNT = 5
+
 WINDOW_TITLE = 'JeoPy'
 
 
@@ -74,6 +78,34 @@ class QuestionsTable(JeopyGrid):
         row = topicsCount / 2
         col = sum(divmod(questionsOnTopicCount, 2))
         self.SetGridCursor(row, col)
+
+
+    def Stretch(self):
+        curWidth, curHeight = self.GetClientSize().asTuple()
+        newWidth, newHeight = [value - DEFAULT_TABLE_MARGIN for value in
+            self.GetParent().GetClientSize().asTuple()]
+
+        self.BeginBatch()
+
+        if curWidth < newWidth:
+            colCount = self.GetNumberCols()
+            addWidth = (newWidth - curWidth) / colCount
+            for col in range(colCount):
+                colWidth = self.GetColSize(col) + addWidth
+                self.SetColSize(col, colWidth)
+            self.SetColMinimalAcceptableWidth(colWidth)
+
+        if curHeight < newHeight:
+            rowCount = self.GetNumberRows()
+            addHeight = (newHeight - curHeight) / rowCount
+            for row in range(rowCount):
+                rowHeight = self.GetRowSize(row) + addHeight
+                self.SetRowSize(row, rowHeight)
+            self.SetRowMinimalAcceptableHeight(rowHeight)
+
+        self.AutoSize()
+        self.Centre()
+        self.EndBatch()
 
 
     def OnKeyDown(self, event):
@@ -281,6 +313,7 @@ class MainWindow(wx.Frame):
             self.questionsTable.Destroy()
         self.questionsTable = initTable(QuestionsTable, self.questionsPanel,
             selection)
+        self.questionsTable.Stretch()
 
         if not self.playersTable is None:
             self.playersTable.Destroy()

@@ -228,22 +228,30 @@ class MainWindow(wx.Frame):
         self.SetSizer(box)
 
 
+    def AskForAbort(self):
+        if not self.game.started:
+            return True
+        try:
+            dialog = wx.MessageDialog(
+                self,
+                'Do you really want to abort current game?',
+                self.GetTitle(),
+                wx.YES_NO | wx.NO_DEFAULT)
+            return dialog.ShowModal() == wx.ID_YES
+        finally:
+            dialog.Destroy()
+
+
     def OnClose(self, event):
-        if self.game.started:
-            try:
-                dialog = wx.MessageDialog(
-                    self,
-                    'Do you really want to quit?',
-                    self.GetTitle(),
-                    wx.YES_NO | wx.NO_DEFAULT)
-                if dialog.ShowModal() == wx.ID_NO:
-                    return
-            finally:
-                dialog.Destroy()
+        if not self.AskForAbort():
+            return
         self.Close()
 
 
     def OnNewGame(self, event):
+        if not self.AskForAbort():
+            return
+
         def setPlayers(players, startGame, game):
             game.players = players
             startGame()
@@ -278,6 +286,8 @@ class MainWindow(wx.Frame):
             self.playersTable.Destroy()
         self.playersTable = initTable(PlayersTable, self.playersPanel,
             self.game.players)
+
+        self.game.started = True
 
 
 if __name__ == '__main__':

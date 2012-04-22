@@ -278,7 +278,7 @@ class MainWindow(wx.Frame):
         try:
             dialog = wx.MessageDialog(
                 self,
-                'Do you really want to abort current game?',
+                'Abort current game?',
                 self.GetTitle(),
                 wx.YES_NO | wx.NO_DEFAULT)
             return dialog.ShowModal() == wx.ID_YES

@@ -1,7 +1,7 @@
 import functools
+import optparse
 import sys
 
-import wxversion; wxversion.select('2.8')
 import wx
 import wx.grid
 
@@ -306,8 +306,9 @@ class MainWindow(wx.Frame):
 
 
     def StartGame(self):
+        global cmdopt
         try:
-            whole = suite.parse(open('sample.fb2', 'rU'))
+            whole = suite.parse(cmdopt.fb2)
         except JeopyError, ex:
             self.DisplayError(ex)
             return
@@ -335,6 +336,11 @@ class MainWindow(wx.Frame):
 
 
 if __name__ == '__main__':
+    oparser = optparse.OptionParser()
+    oparser.add_option('', '--fb2', default='sample.fb2',
+        help='path to .fb2 tournament file')
+    cmdopt, _ = oparser.parse_args()
+
     application = wx.App(redirect=True)
     window = MainWindow()
     window.Show()

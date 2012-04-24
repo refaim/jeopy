@@ -1,3 +1,6 @@
 Required third-party libraries:
     * wxPython 2.8+
     * lxml
+
+Optional:
+    * PyInstaller (for build.py)

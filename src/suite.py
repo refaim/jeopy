@@ -1,105 +1,64 @@
-import json
-import os
+# -*- coding: utf-8 -*-
+
 import random
+import re
 import shutil
-import string
 import StringIO
 import urllib2
 import urlparse
-import zipfile
 
-from lxml import etree
+from lxml import etree, html
 
 from common import *
 
 
 def download(url):
-    parsed = urlparse.urlparse(url)
-    if parsed.netloc != 'db.chgk.info':
-        raise JeopyError('Incorrect URL')
-
-    if not url.endswith('/'):
-         url += '/'
-    url = urlparse.urljoin(url, 'fb2')
-
     robj = urllib2.urlopen(url)
     fobj = StringIO.StringIO()
     shutil.copyfileobj(robj, fobj)
+    fobj.seek(0)
     robj.close()
-
-    archive = zipfile.ZipFile(fobj, 'r')
-    if len(archive.namelist()) != 1:
-        raise JeopyError('Wrong file count in the archive')
-    fb2name = archive.namelist()[0]
-    if os.path.splitext(fb2name)[1] != '.fb2':
-        raise JeopyError('No fb2 files found in the archive')
-
-    return archive.open(fb2name, 'rU')
+    return fobj
 
 
-def parse(fb2):
+def parse(fobj):
     def findall(selector, node):
-        xpath = etree.XPath(selector, namespaces={
-            'fb2': 'http://www.gribuser.ru/xml/fictionbook/2.0'
-        })
-        result = xpath(node)
-        if not result:
-            raise JeopyError(
-                'XML parse error, "%s" not found at node %s on line %d' %
-                (selector, node.tag, node.sourceline))
-        return result
+        xpath = etree.XPath(selector)
+        return xpath(node)
 
     def find(selector, node):
         return findall(selector, node)[0]
 
-    tree = etree.parse(fb2)
-    title = find('//fb2:book-title/text()', tree)
-    body = find('//fb2:body', tree)
-    sections = {}
+    def apply_regexp(regexp, string):
+        match = regexp.match(string)
+        if not match:
+            raise JeopyError((u'Unable to apply regexp "%s" to string "%s"' %
+                (regexp.pattern, string)).encode('cp1251'))
+        return match.group(1).strip()
 
-    # rounds
-    for section in findall('//fb2:section', body):
-        sectitle = find('.//fb2:title/fb2:p/text()', section)
-        sections[sectitle] = {}
+    topic_re = re.compile(r'([^\(]+)')
+    question_re = re.compile(r'\d+\.(.+)')
 
-        # questions / answers blocks
-        for i, poem in enumerate(findall('//fb2:poem', section)):
+    tree = html.parse(fobj)
+    title = find('//h1[@class="title"]/text()', tree)
+    topics = {}
 
-            is_questions = (i + 1) % 2 != 0
+    for topic_node in findall('//div[@id="main"]/div[not(@class)]', tree):
+        topic = apply_regexp(topic_re,
+            find('./*[1]/following-sibling::text()[1]', topic_node)[1:])
+        topics[topic] = []
+        for question_node in findall('./p', topic_node):
+            question_parts = findall('./i/preceding-sibling::text()', question_node)
+            question_parts = 'dummy'.join(map(unicode.strip, question_parts))
+            question_parts = ' '.join(question_parts.splitlines())
+            question = apply_regexp(question_re,
+                question_parts.replace('dummy', '\n'))
+            answer = find('./i/following::text()[1]', question_node)
+            topics[topic].append((question, answer))
 
-            if is_questions:
-
-                delnum = lambda s: s.strip()[3:]
-
-                questions = []
-                rows = map(string.strip, findall('.//fb2:v/text()', poem))
-                blocktitle = rows[0]
-                for row in rows[1:]:
-                    if row[0].isdigit():
-                        questions.append(delnum(row))
-                    else:
-                        questions[-1] += u'\n' + row
-                if len(questions) < 5:
-                    questions.append(delnum(poem.getnext().text))
-
-            else:
-
-                answers = map(delnum, findall('.//fb2:v/text()', poem))
-                if len(answers) != 5:
-                    raise JeopyError(
-                        'Not enough answers at line %d' % poem.sourceline)
-
-                # save
-                sections[sectitle][blocktitle] = zip(questions, answers)
-
-    suite = { title: sections }
-    return suite
+    return { 'title': title, 'topics': topics }
 
 
 def select(suite, count=5):
-    blocks = {}
-    for sections in suite.itervalues():
-        for section in sections.itervalues():
-            for title, block in section.iteritems():
-                blocks[title] = block
-    return random.sample(blocks.items(), count)
+    topics = suite['topics']
+    return { title: topics[title] for title in random.sample(topics, count) }

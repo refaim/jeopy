@@ -61,21 +61,21 @@ class QuestionsTable(JeopyGrid):
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
 
 
-    def Fill(self, data):
-        topicsCount = len(data)
-        questionsOnTopicCount = len(data[0][1])
-        self.CreateGrid(topicsCount, questionsOnTopicCount + 1)
+    def Fill(self, blocks):
+        topicsCount = len(blocks)
+        questionsInBlock = len(blocks.values()[0])
+        self.CreateGrid(topicsCount, questionsInBlock + 1)
 
-        for rownum, (topic, questions) in enumerate(data):
-            self.SetCellValue(rownum, 0, topic)
-            for colnum, question in enumerate(questions):
-                number = colnum + 1
-                self.SetCellValue(rownum, number, str(number * PRICE_MULTIPLIER))
-                attr = self.GetOrCreateCellAttr(rownum, number)
-                attr.text = question[0]
+        for row, (topic, block) in enumerate(blocks.iteritems()):
+            self.SetCellValue(row, 0, topic)
+            for col, (question, _) in enumerate(block):
+                qidx = col + 1
+                self.SetCellValue(row, qidx, str(qidx * PRICE_MULTIPLIER))
+                attr = self.GetOrCreateCellAttr(row, qidx)
+                attr.text = question
 
         row = topicsCount / 2
-        col = sum(divmod(questionsOnTopicCount, 2))
+        col = sum(divmod(questionsInBlock, 2))
         self.SetGridCursor(row, col)
 
 

@@ -27,7 +27,10 @@ def parse(fobj):
         return xpath(node)
 
     def find(selector, node):
-        return findall(selector, node)[0]
+        result = findall(selector, node)
+        if isinstance(result, list):
+            return result[0]
+        return result
 
     def apply_regexp(regexp, string):
         match = regexp.match(string)
@@ -36,7 +39,6 @@ def parse(fobj):
                 (regexp.pattern, string)).encode('cp1251'))
         return match.group(1).strip()
 
-    topic_re = re.compile(r'([^\(]+)')
     question_re = re.compile(r'\d+\.(.+)')
 
     tree = html.parse(fobj)
@@ -44,8 +46,9 @@ def parse(fobj):
     topics = {}
 
     for topic_node in findall('//div[@id="main"]/div[not(@class)]', tree):
-        topic = apply_regexp(topic_re,
-            find('./*[1]/following-sibling::text()[1]', topic_node)[1:])
+        topic = find(
+            'substring-before(./*[1]/following-sibling::text()[1], "(")',
+            topic_node)[1:].strip()
         topics[topic] = []
         for question_node in findall('./p', topic_node):
             question_parts = findall('./i/preceding-sibling::text()', question_node)

@@ -244,6 +244,7 @@ class MainWindow(wx.Frame):
         self.playersTable = None
         self.font = wx.SystemSettings.GetFont(0)
         self.font.SetPointSize(DEFAULT_FONT_SIZE)
+        self.OnNewGame(event=None)
 
 
     def DisplayError(self, data):

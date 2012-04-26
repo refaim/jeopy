@@ -30,14 +30,7 @@ def parse(fobj):
             return result[0]
         return result
 
-    def apply_regexp(regexp, string):
-        match = regexp.match(string)
-        if not match:
-            raise JeopyError((u'Unable to apply regexp "%s" to string "%s"' %
-                (regexp.pattern, string)).encode('cp1251'))
-        return match.group(1).strip()
-
-    question_re = re.compile(r'\d+\.(.+)')
+    question_re = re.compile(r'^\d\.\s?')
 
     tree = html.parse(fobj)
     title = find('//h1[@class="title"]/text()', tree)
@@ -49,11 +42,12 @@ def parse(fobj):
             topic_node)[1:].strip()
         topics[topic] = []
         for question_node in findall('./p', topic_node):
-            question_parts = findall('./i/preceding-sibling::text()', question_node)
-            question_parts = 'dummy'.join(map(unicode.strip, question_parts))
-            question_parts = ' '.join(question_parts.splitlines())
-            question = apply_regexp(question_re,
-                question_parts.replace('dummy', '\n'))
+
+            # ['text\nwith\nnewlines\n', 'verse', 'verse', ..., 'text\nagain\n']
+            question = '\n'.join(block.strip().replace('\n', ' ') for block in
+                findall('./i/preceding-sibling::text()', question_node))
+            question = question_re.sub('', question, count=1) # strip number
+
             answer = find('./i/following::text()[1]', question_node)
             topics[topic].append((question, answer))
 
